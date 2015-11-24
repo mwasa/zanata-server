@@ -60,6 +60,8 @@ import javax.servlet.http.HttpServletRequest;
 @ZanataSecured
 public class ContactAdminAction implements Serializable {
 
+    private final int MAXLENGTH = 1000;
+
     @In(value = ZanataJpaIdentityStore.AUTHENTICATED_USER, required = false)
     private HAccount authenticatedAccount;
 
@@ -89,6 +91,10 @@ public class ContactAdminAction implements Serializable {
         String fromLoginName = authenticatedAccount.getUsername();
         String replyEmail = authenticatedAccount.getPerson().getEmail();
         subject = msgs.get("jsf.message.admin.inquiry.subject");
+        if (message.length() > MAXLENGTH) {
+            facesMessages.addGlobal("Message is too long (>" + MAXLENGTH + " characters)");
+            return;
+        }
         try {
             EmailStrategy strategy = new ContactAdminEmailStrategy(
                 fromLoginName, fromName, replyEmail, subject, message);
@@ -106,7 +112,10 @@ public class ContactAdminAction implements Serializable {
     public void sendAnonymous() {
         String ipAddress = getClientIp(); //client ip address
         subject = msgs.get("jsf.message.admin.inquiry.subject");
-
+        if (message.length() > MAXLENGTH) {
+            facesMessages.addGlobal("Message is too long (>" + MAXLENGTH + " characters)");
+            return;
+        }
         try {
             EmailStrategy strategy = new ContactAdminAnonymousEmailStrategy(
                 ipAddress, subject, message);
