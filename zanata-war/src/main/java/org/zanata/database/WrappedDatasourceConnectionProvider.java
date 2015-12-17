@@ -21,23 +21,73 @@
 
 package org.zanata.database;
 
+import com.google.common.base.Throwables;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+
 import java.sql.Connection;
 import java.sql.SQLException;
-
-import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 
 /**
  * @author Sean Flanigan <a
  *         href="mailto:sflaniga@redhat.com">sflaniga@redhat.com</a>
  */
-public class WrappedDatasourceConnectionProvider extends
-        DatasourceConnectionProviderImpl {
+public class WrappedDatasourceConnectionProvider implements ConnectionProvider {
     private static final long serialVersionUID = 1L;
     private final WrapperManager wrapperManager = new WrapperManager();
 
-    @Override
-    public Connection getConnection() throws SQLException {
-        return wrapperManager.wrapIfNeeded(super.getConnection());
+    private static final Class<? extends ConnectionProvider> delegateClass;
+
+    static {
+        try {
+            // Hibernate 4.2 (for EAP)
+            Class<? extends ConnectionProvider> aClass = delegateClass =
+                    (Class<? extends ConnectionProvider>) Class.forName(
+                            "org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl");
+        } catch (ClassNotFoundException e) {
+            try {
+                // Hibernate 5 (for Wildfly)
+                delegateClass =
+                        (Class<? extends ConnectionProvider>) Class.forName(
+                                "org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl");
+            } catch (ClassNotFoundException cnfex) {
+                throw new RuntimeException("Hibernate not detected on the classpath!");
+            }
+        }
     }
 
+    private ConnectionProvider delegate;
+
+    public WrappedDatasourceConnectionProvider() {
+        try {
+            delegate = delegateClass.newInstance();
+        }
+        catch (InstantiationException | IllegalAccessException e) {
+            Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    public Connection getConnection() throws SQLException {
+        return wrapperManager.wrapIfNeeded(delegate.getConnection());
+    }
+
+    @Override
+    public void closeConnection(Connection conn) throws SQLException {
+        delegate.closeConnection(conn);
+    }
+
+    @Override
+    public boolean supportsAggressiveRelease() {
+        return delegate.supportsAggressiveRelease();
+    }
+
+    @Override
+    public boolean isUnwrappableAs(Class unwrapType) {
+        return delegate.isUnwrappableAs(unwrapType);
+    }
+
+    @Override
+    public <T> T unwrap(Class<T> unwrapType) {
+        return delegate.unwrap(unwrapType);
+    }
 }
