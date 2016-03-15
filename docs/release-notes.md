@@ -28,14 +28,18 @@
 * [ZNTA-742](https://zanata.atlassian.net/browse/ZNTA-742) - Get a list of contributors for a Project version via the API
 * [ZNTA-744](https://zanata.atlassian.net/browse/ZNTA-744) - Add review data to the contribution statistics API
 * [ZNTA-879](https://zanata.atlassian.net/browse/ZNTA-879) - Allow admin to configure the visibility of user email
-* [ZNTA-412](https://zanata.atlassian.net/browse/ZNTA-412) - Profile link to project maintainers, language members, and version group maintainers 
+* [ZNTA-412](https://zanata.atlassian.net/browse/ZNTA-412) - Profile link to project maintainers, language members, and version group maintainers
 * [ZNTA-905](https://zanata.atlassian.net/browse/ZNTA-905) - Remove 0% matching translation memory entry
 * [ZNTA-928](https://zanata.atlassian.net/browse/ZNTA-928) - Readonly project doesn't have "lock" icon in UI
 * [ZNTA-793](https://zanata.atlassian.net/browse/ZNTA-793) - Remove unused method in TranslationMemoryAction
 
 -----------------------
+## 3.8.3
+<h5>Bug fixes</h5>
+* [ZNTA-953](https://zanata.atlassian.net/browse/ZNTA-953) - Fix delete version
 
 ## 3.8.2
+<h5>Bug fixes</h5>
 * [ZNTA-854](https://zanata.atlassian.net/browse/ZNTA-854) - Fast scrolling(infinite scroll) in glossary table not loading data
 
 ## 3.8.1
