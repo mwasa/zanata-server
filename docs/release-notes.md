@@ -1,6 +1,8 @@
 ## 3.8.3
-<h5>Bug fixes</h5>
-* [ZNTA-953](https://zanata.atlassian.net/browse/ZNTA-953) - Fix delete version
+##### Bug fixes
+* [ZNTA-519](https://zanata.atlassian.net/browse/ZNTA-519) - Unable to push the POT file beginning from the underscore (_) in the filename
+* [ZNTA-953](https://zanata.atlassian.net/browse/ZNTA-953) - Cannot delete a version in 3.8.2
+-----------------------
 
 ## 3.8.2
 <h5>Bug fixes</h5>
