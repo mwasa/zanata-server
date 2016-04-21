@@ -779,7 +779,8 @@ public class TranslationServiceImpl implements TranslationService {
                 }));
         final int numPlurals = resourceUtils.getNumPlurals(document, locale);
 
-        List<TextFlowTargetState> states = Lists.newArrayList();
+        ImmutableList.Builder<TextFlowTargetState> states =
+                ImmutableList.builder();
 
         for (TextFlowTarget incomingTarget : batch) {
             String resId = incomingTarget.getResId();
@@ -888,8 +889,8 @@ public class TranslationServiceImpl implements TranslationService {
                 document.getId(), locale.getLocaleId());
 
         TextFlowTargetStateEvent tftUpdatedEvent =
-            new TextFlowTargetStateEvent(documentLocaleKey,
-                projectIterationId, actorId, ImmutableList.copyOf(states));
+                new TextFlowTargetStateEvent(documentLocaleKey,
+                        projectIterationId, actorId, states.build());
         textFlowTargetStateEvent.fire(tftUpdatedEvent);
 
         textFlowTargetDAO.flush();

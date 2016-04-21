@@ -21,6 +21,7 @@
 package org.zanata.service.impl;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -30,6 +31,7 @@ import com.google.common.collect.Lists;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+
 import org.apache.deltaspike.jpa.api.transaction.Transactional;
 import org.zanata.ApplicationConfiguration;
 import org.zanata.async.Async;
@@ -39,9 +41,9 @@ import org.zanata.common.ContentState;
 import org.zanata.common.LocaleId;
 import org.zanata.dao.DocumentDAO;
 import org.zanata.dao.ProjectIterationDAO;
-import org.zanata.events.DocumentMilestoneEvent;
 import org.zanata.events.DocumentStatisticUpdatedEvent;
 import org.zanata.events.DocumentUploadedEvent;
+import org.zanata.events.webhook.DocumentMilestoneEvent;
 import org.zanata.i18n.Messages;
 import org.zanata.lock.Lock;
 import org.zanata.model.HAccount;
@@ -277,21 +279,19 @@ public class DocumentServiceImpl implements DocumentService {
                             new DocumentMilestoneEvent(project.getSlug(),
                                     version.getSlug(), document.getDocId(),
                                     event.getLocaleId(), message, editorUrl);
-                    for (WebHook webHook : project.getWebHooks()) {
-                        publishDocumentMilestoneEvent(webHook, milestoneEvent);
-                    }
+                    publishDocumentMilestoneEvent(project.getWebHooks(),
+                            milestoneEvent);
                 }
             }
         }
     }
 
-    public void publishDocumentMilestoneEvent(WebHook webHook,
-            DocumentMilestoneEvent milestoneEvent) {
-        WebHooksPublisher.publish(webHook.getUrl(), milestoneEvent,
-                Optional.fromNullable(webHook.getSecret()));
-        log.info("firing webhook: {}:{}:{}:{}",
-                webHook.getUrl(), milestoneEvent.getProject(),
-                milestoneEvent.getVersion(), milestoneEvent.getDocId());
+    public void publishDocumentMilestoneEvent(List<WebHook> webHooks,
+            DocumentMilestoneEvent event) {
+        for (WebHook webHook : webHooks) {
+            WebHooksPublisher.publish(webHook.getUrl(), event,
+                    Optional.fromNullable(webHook.getSecret()));
+        }
     }
 
     /**

@@ -8,14 +8,27 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.deltaspike.core.api.provider.BeanManagerProvider;
+import org.zanata.ApplicationConfiguration;
 import org.zanata.async.Async;
+import org.zanata.common.ContentState;
 import org.zanata.common.LocaleId;
+import org.zanata.dao.DocumentDAO;
+import org.zanata.dao.PersonDAO;
 import org.zanata.dao.TextFlowDAO;
 import org.zanata.events.DocumentStatisticUpdatedEvent;
 import org.zanata.events.TextFlowTargetStateEvent;
+import org.zanata.events.webhook.DocumentStatsEvent;
+import org.zanata.model.HDocument;
+import org.zanata.model.HPerson;
+import org.zanata.model.HProject;
+import org.zanata.model.WebHook;
+import org.zanata.rest.dto.User;
+import org.zanata.rest.editor.service.UserService;
 import org.zanata.service.TranslationStateCache;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.enterprise.event.Observes;
@@ -44,6 +57,18 @@ public class TranslationUpdatedManager {
     private TextFlowDAO textFlowDAO;
 
     @Inject
+    private PersonDAO personDAO;
+
+    @Inject
+    private DocumentDAO documentDAO;
+
+    @Inject
+    private UserService userService;
+
+    @Inject
+    private ApplicationConfiguration applicationConfiguration;
+
+    @Inject
     private Event<DocumentStatisticUpdatedEvent> documentStatisticUpdatedEvent;
 
     /**
@@ -56,6 +81,7 @@ public class TranslationUpdatedManager {
             TextFlowTargetStateEvent event) {
         translationStateCacheImpl.textFlowStateUpdated(event);
         publishAsyncEvent(event);
+        processWebHookEvent(event);
     }
 
     // Fire asynchronous event
@@ -80,12 +106,72 @@ public class TranslationUpdatedManager {
         }
     }
 
+    void processWebHookEvent(TextFlowTargetStateEvent event) {
+        HPerson person = personDAO.findById(event.getActorId());
+        if(person == null) {
+            return;
+        }
+        HDocument document = documentDAO.findById(event.getKey().getDocumentId());
+        String docId = document.getDocId();
+        String versionSlug = document.getProjectIteration().getSlug();
+        HProject project = document.getProjectIteration().getProject();
+        if (project.getWebHooks().isEmpty()) {
+            return;
+        }
+        String projectSlug = project.getSlug();
+        LocaleId localeId = event.getKey().getLocaleId();
+
+        User user = userService.transferToUser(person.getAccount(),
+            applicationConfiguration.isDisplayUserEmail());
+
+        Map<ContentState, Integer> contentStates = Maps.newHashMap();
+        for (TextFlowTargetState state : event.getStates()) {
+            Long tfId = state.getTextFlowId();
+            int wordCount = textFlowDAO.getWordCount(tfId);
+            Integer previousStateCount = contentStates.get(state.getPreviousState());
+            Integer newStateCount = contentStates.get(state.getNewState());
+
+            if (previousStateCount == null) {
+                previousStateCount = 0;
+            }
+            if (newStateCount == null) {
+                newStateCount = 0;
+            }
+            previousStateCount -= wordCount;
+            newStateCount += wordCount;
+
+            contentStates.put(state.getPreviousState(), previousStateCount);
+            contentStates.put(state.getNewState(), newStateCount);
+        }
+        DocumentStatsEvent webhookEvent =
+            new DocumentStatsEvent(user, projectSlug,
+                versionSlug, docId, localeId, contentStates);
+
+        publishWebhookEvent(project.getWebHooks(), webhookEvent);
+    }
+
+    public void publishWebhookEvent(List<WebHook> webHooks,
+            DocumentStatsEvent event) {
+        for (WebHook webHook : webHooks) {
+            WebHooksPublisher.publish(webHook.getUrl(), event,
+                    Optional.fromNullable(webHook.getSecret()));
+        }
+    }
+
     @VisibleForTesting
     public void init(TranslationStateCache translationStateCacheImpl,
-            TextFlowDAO textFlowDAO,
-            Event<DocumentStatisticUpdatedEvent> documentStatisticUpdatedEvent) {
+        TextFlowDAO textFlowDAO,
+        Event<DocumentStatisticUpdatedEvent> documentStatisticUpdatedEvent,
+        DocumentDAO documentDAO,
+        PersonDAO personDAO, UserService userService,
+        ApplicationConfiguration applicationConfiguration) {
         this.translationStateCacheImpl = translationStateCacheImpl;
         this.textFlowDAO = textFlowDAO;
-        this.documentStatisticUpdatedEvent = documentStatisticUpdatedEvent;
+        this.documentStatisticUpdatedEvent =
+            documentStatisticUpdatedEvent;
+        this.documentDAO = documentDAO;
+        this.personDAO = personDAO;
+        this.userService = userService;
+        this.applicationConfiguration = applicationConfiguration;
     }
 }
