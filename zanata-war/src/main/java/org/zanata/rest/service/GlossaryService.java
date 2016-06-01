@@ -63,13 +63,13 @@ public class GlossaryService implements GlossaryResource {
         HLocale srcLocale = localeServiceImpl.getByLocaleId(srcLocaleId);
 
         int entryCount =
-                glossaryDAO.getEntryCountBySourceLocales(LocaleId.EN_US);
+                glossaryDAO.getGlobalEntryCountBySourceLocales(LocaleId.EN_US);
 
         GlossaryLocaleInfo srcGlossaryLocale =
                 new GlossaryLocaleInfo(generateLocaleDetails(srcLocale), entryCount);
 
         Map<LocaleId, Integer> transMap =
-                glossaryDAO.getTranslationLocales(srcLocaleId);
+                glossaryDAO.getGlobalTranslationLocales(srcLocaleId);
 
         List<HLocale> supportedLocales =
             localeServiceImpl.getSupportedLocales();
@@ -138,11 +138,11 @@ public class GlossaryService implements GlossaryResource {
         int offset = (validatePage(page) - 1) * validatePageSize(sizePerPage);
 
         List<HGlossaryEntry> hGlossaryEntries =
-                glossaryDAO.getEntriesByLocale(srcLocale, offset,
+                glossaryDAO.getGlobalEntriesByLocale(srcLocale, offset,
                         validatePageSize(sizePerPage),
                         filter, convertToSortField(fields));
         int totalCount =
-            glossaryDAO.getEntriesCount(srcLocale, filter);
+            glossaryDAO.getGlobalEntriesCount(srcLocale, filter);
 
         ResultList<GlossaryEntry> resultList = new ResultList<GlossaryEntry>();
         resultList.setTotalCount(totalCount);
@@ -241,7 +241,7 @@ public class GlossaryService implements GlossaryResource {
     public Response deleteAllEntries() {
         identity.checkPermission("", "glossary-delete");
 
-        int rowCount = glossaryDAO.deleteAllEntries();
+        int rowCount = glossaryDAO.deleteAllGlobalEntries();
         log.info("Glossary delete all: " + rowCount);
 
         return Response.ok().build();

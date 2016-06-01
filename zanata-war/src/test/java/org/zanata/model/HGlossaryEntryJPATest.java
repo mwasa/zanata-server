@@ -29,6 +29,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.zanata.ZanataDbunitJpaTest;
+import org.zanata.common.LocaleId;
 import org.zanata.dao.GlossaryDAO;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -48,7 +49,8 @@ public class HGlossaryEntryJPATest extends ZanataDbunitJpaTest {
 
     @Test
     public void testHashMap() {
-        List<HGlossaryEntry> entryList = glossaryDAO.getEntries();
+        List<HGlossaryEntry> entryList = glossaryDAO.getGlobalEntriesByLocale(
+                LocaleId.EN_US, 0, 200, null, null);
 
         for (HGlossaryEntry hGlossaryEntry : entryList) {
             for (Map.Entry<HLocale, HGlossaryTerm> entry : hGlossaryEntry
@@ -64,25 +66,20 @@ public class HGlossaryEntryJPATest extends ZanataDbunitJpaTest {
 
     @Test
     public void testTermsSize() {
-        List<HGlossaryEntry> entryList = glossaryDAO.getEntries();
+        List<HGlossaryEntry> entryList = glossaryDAO.getGlobalEntriesByLocale(
+            LocaleId.EN_US, 0, 200, null, null);
         assertThat(entryList.get(0).getGlossaryTerms().size(), is(3));
     }
 
     @Test
     public void testDeleteGlossaries() {
-        List<HGlossaryEntry> hGlossaryEntries = glossaryDAO.getEntries();
+        List<HGlossaryEntry> entryList = glossaryDAO.getGlobalEntriesByLocale(
+            LocaleId.EN_US, 0, 200, null, null);
 
-        for (HGlossaryEntry hGlossaryEntry : hGlossaryEntries) {
-            glossaryDAO.makeTransient(hGlossaryEntry);
-        }
+        glossaryDAO.deleteAllGlobalEntries();
         glossaryDAO.flush();
 
-        assertThat(glossaryDAO.getEntries().size(), is(0));
-
-        assertThat(
-                ((Long) super.getSession()
-                        .createQuery("select count(*) from HGlossaryTerm")
-                        .uniqueResult()), is(0L));
+        assertThat(entryList.size(), is(0));
     }
 
     @Override

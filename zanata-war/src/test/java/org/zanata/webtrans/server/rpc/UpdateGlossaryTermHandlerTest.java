@@ -27,7 +27,6 @@ import net.customware.gwt.dispatch.shared.ActionException;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.mockito.Mockito.verify;
@@ -111,7 +110,7 @@ public class UpdateGlossaryTermHandlerTest extends ZanataTest {
                     selectedDetailEntry.getSource(),
                     selectedDetailEntry.getPos(),
                     selectedDetailEntry.getDescription());
-        when(glossaryDAO.getEntryByContentHash(resId)).thenReturn(hGlossaryEntry);
+        when(glossaryDAO.getGlobalEntryByContentHash(resId)).thenReturn(hGlossaryEntry);
         when(localeServiceImpl.getByLocaleId(selectedDetailEntry
                         .getTargetLocale())).thenReturn(targetHLocale);
         when(glossaryDAO.makePersistent(hGlossaryEntry)).thenReturn(
@@ -136,7 +135,7 @@ public class UpdateGlossaryTermHandlerTest extends ZanataTest {
                         selectedDetailEntry.getSource(),
                         selectedDetailEntry.getPos(),
                         selectedDetailEntry.getDescription());
-        when(glossaryDAO.getEntryByContentHash(resId)).thenReturn(hGlossaryEntry);
+        when(glossaryDAO.getGlobalEntryByContentHash(resId)).thenReturn(hGlossaryEntry);
         when(localeServiceImpl.getByLocaleId(selectedDetailEntry
                 .getTargetLocale())).thenReturn(targetHLocale);
         HGlossaryTerm targetTerm = new HGlossaryTerm("target");

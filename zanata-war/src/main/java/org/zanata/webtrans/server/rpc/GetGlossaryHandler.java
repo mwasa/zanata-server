@@ -93,7 +93,7 @@ public class GetGlossaryHandler extends
                 HGlossaryTerm targetTerm = null;
                 if (sourceTerm != null) {
                     targetTerm =
-                            glossaryDAO.getTermByEntryAndLocale(sourceTerm
+                            glossaryDAO.getTermByGlobalEntryAndLocale(sourceTerm
                                     .getGlossaryEntry().getId(), localeID);
                 }
                 if (targetTerm == null) {

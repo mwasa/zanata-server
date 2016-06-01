@@ -239,7 +239,7 @@ public class GlossaryFileServiceImpl implements GlossaryFileService {
         if (id != null) {
             hGlossaryEntry = glossaryDAO.findById(id);
         } else {
-            hGlossaryEntry = glossaryDAO.getEntryByContentHash(contentHash);
+            hGlossaryEntry = glossaryDAO.getGlobalEntryByContentHash(contentHash);
         }
 
         if (hGlossaryEntry == null) {
@@ -263,7 +263,7 @@ public class GlossaryFileServiceImpl implements GlossaryFileService {
         String contentHash = getContentHash(from);
 
         HGlossaryEntry sameHashEntry =
-                glossaryDAO.getEntryByContentHash(contentHash);
+                glossaryDAO.getGlobalEntryByContentHash(contentHash);
 
         if(sameHashEntry == null) {
             return Optional.empty();
